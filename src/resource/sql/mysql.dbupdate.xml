@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="EUC-KR"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="update">
+	<update id="setFind" parameterClass="com.skyun.recon.util.database.ibatis.vo.subpathVo">
+		UPDATE PI_FIND F 
+		SET F.REMEDIATION_STATUS=#remediation_status# 
+		WHERE F.HASH_ID = #parent_id#
+	</update>
+	
+	<update id="setSchedule" parameterClass="com.skyun.recon.util.database.ibatis.vo.schdelesVo">
+		UPDATE PI_SCAN_SCHEDULE S SET 
+			S.ACTIVE_STATUS='00' 
+		WHERE 1=1
+			AND S.SCHEDULE_ID=#schedule_id#
+			AND S.ACTIVE_STATUS='02'
+	</update>
+	
+	<update id="setAgentUseToN" parameterClass="com.skyun.recon.util.database.ibatis.vo.agentVo">
+		UPDATE PI_AGENTS SET 
+			AGENT_USE = 'N' 
+		WHERE 1=1
+		AND AGENT_ID = #agent_id#
+		AND AGENT_NAME = #agent_name#
+		AND AP_NO = #ap_no#
+	</update>
+	
+	<update id="setTargetUseToN" parameterClass="com.skyun.recon.util.database.ibatis.vo.targetVo">
+		UPDATE PI_TARGETS SET 
+			TARGET_USE = 'N' 
+		WHERE 1=1
+		AND TARGET_ID = #target_id#
+		AND NAME = #name#
+	</update>
+	
+	<update id="setBossName" parameterClass="com.skyun.recon.util.database.ibatis.vo.groupVo">
+		UPDATE PI_USER SET
+		BOSS_NAME = (
+			SELECT user_name
+			FROM pi_user
+			<isEqual property="insa_code" compareValue="2140">
+				WHERE insa_code = '2543'
+				AND JIKWEE = 'L10'
+			</isEqual>
+			<isNotEqual property="insa_code" compareValue="2140">
+				WHERE insa_code = #insa_code#
+				<isEqual property="insa_code" compareValue="2543">
+					AND JIKWEE = 'L10'
+				</isEqual>
+				<isNotEqual property="insa_code" compareValue="2543">
+					AND JIKWEE = 'L8'
+				</isNotEqual>
+			</isNotEqual>
+			ORDER BY jikwee DESC
+			LIMIT 1
+		)
+		WHERE INSA_CODE = #insa_code#
+	</update>
+	
+	<update id="setColumn" parameterClass="HashMap">
+		UPDATE PI_FIND SET
+			`COLUMN` = #column#
+		WHERE TARGET_ID = #target_id#
+			AND AP_NO = #ap_no#
+			AND PATH LIKE CONCAT('%', #path#)
+	</update>
+	
+	<update id="setDeldate" parameterClass="HashMap">
+		UPDATE PI_FIND SET
+			DELDATE = STR_TO_DATE(#regdate#, '%Y-%m-%d %H:%i:%s')
+		WHERE TARGET_ID = #target_id#
+			AND REGDATE &lt; STR_TO_DATE(#regdate#, '%Y-%m-%d %H:%i:%s')
+			AND DELDATE IS NULL
+			AND AP_NO = #ap_no#
+	</update>
+	
+	<update id="setTargetDuration" parameterClass="com.skyun.recon.util.database.ibatis.vo.targetVo">
+		UPDATE PI_TARGETS SET 
+			duration = #duration#
+			<isNotNull property="all_duration">
+				<isNotEqual property="all_duration" compareProperty="test">
+					,all_duration = #all_duration#
+				</isNotEqual>
+			</isNotNull>
+			<isNotNull property="all_scan_date">
+				<isNotEqual property="all_scan_date" compareProperty="test">
+					,all_scan_date = #all_scan_date#
+				</isNotEqual>
+			</isNotNull>
+		WHERE 1=1
+		AND TARGET_ID = #target_id#
+		AND GROUP_ID = #group_id#
+		AND AP_NO = #ap_no#
+	</update>
+	
+	<update id="setPathOwner" parameterClass="com.skyun.recon.util.database.ibatis.vo.pathOwnerVo">
+		UPDATE PI_FIND SET
+			OWNER = #user_no#
+		WHERE 1=1
+			AND TARGET_ID = #target_id#
+        	AND OWNER IS NULL
+			AND PATH LIKE CONCAT(#path#, '%')
+	</update>
+</sqlMap>

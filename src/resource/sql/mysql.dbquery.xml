@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="EUC-KR"?>
+
+<!DOCTYPE sqlMap PUBLIC "-//ibatis.apache.org//DTD SQL Map 2.0//EN"  "http://ibatis.apache.org/dtd/sql-map-2.dtd">
+
+<sqlMap namespace="query">
+	<select id="getgroupall" parameterClass="String" resultClass="com.skyun.recon.util.database.ibatis.vo.groupallVo">
+		SELECT
+		group_id,comments,search_status,name,search_time,matches,prohibited,test,critical,notice,error,regdate
+		FROM pi_groupall
+	</select>
+	
+	<select id="isThereTarget" parameterClass="com.skyun.recon.util.database.ibatis.vo.targetVo" resultClass="com.skyun.recon.util.database.ibatis.vo.targetVo">
+		SELECT
+		group_id,target_id,comments,name,search_status,name,critical,error,notice,test,prohibited,matchcnt
+		FROM pi_targets
+		where group_id=#group_id#
+		and target_id=#target_id#
+		and search_time=#search_time#
+	</select>
+	
+	<select id="getExceptionList" resultClass="com.skyun.recon.util.database.ibatis.vo.exceptionVo">
+		SELECT
+			group_id,target_id,hash_id
+		FROM pi_exception
+		where approval_status='E'
+	</select>
+	
+	<select id="getDrmStatus" parameterClass="com.skyun.recon.util.database.ibatis.vo.schdelesVo" resultClass="com.skyun.recon.util.database.ibatis.vo.netScheduleVo">
+		SELECT NS.DRM_STATUS
+		FROM pi_targets T, skt_net_schedule NS
+		WHERE NS.NET_TYPE_ID = T.TARGET_ID
+		  AND NS.AP_NO = T.AP_NO
+		  AND NS.NET_ID = T.NET_ID
+		  AND NS.ENABLE = 'Y'
+		  AND NS.NET_TYPE_ID = #schedule_target_id#
+		  AND T.AP_NO = #ap_no#
+	</select> 
+	
+	<select id="getpiAccountInfo" resultClass="com.skyun.recon.util.database.ibatis.vo.pi_account_info">
+		SELECT 
+			a.svr_host as svr_host,
+			a.ACCOUNT as ACCOUNT,
+			a.user_id as user_id,
+			b.target_id as target_id
+		from pi_account_info a, pi_targets b 
+		WHERE a.svr_host=b.name
+		ORDER BY 1,2,3	
+	</select>
+	
+	<select id="getTargetUse" resultClass="com.skyun.recon.util.database.ibatis.vo.targetVo" parameterClass="HashMap">
+		SELECT
+			group_id,target_id,comments,name,search_status,critical,error,notice,test,prohibited,matchcnt
+		FROM pi_targets
+		where target_use = 'Y'
+			AND ap_no = #ap_no#
+	</select>
+	
+	<select id="getAgentUse" parameterClass="HashMap" resultClass="com.skyun.recon.util.database.ibatis.vo.agentVo">
+		SELECT  
+			agent_id, agent_name, agent_type, agent_version, agent_platform,
+			agent_platform_compatibility,agent_verified,agent_connected,agent_proxy,agent_user
+			agent_cpu,agent_cores,agent_boot,agent_ram,agent_started,
+			agent_connected_ip
+		FROM pi_agents
+		WHERE agent_use = 'Y'
+			AND ap_no = #ap_no#
+	</select>
+	
+	<select id="getGroup" parameterClass="String" resultClass="com.skyun.recon.util.database.ibatis.vo.groupVo">
+		SELECT 
+			INSA_CODE, TEAM_NAME, MANAGER_ID
+		FROM pi_group
+	</select>
+	
+	<select id="getMonthlyReportCount" resultClass="int">
+		SELECT
+			COUNT(YYYYMM)
+		FROM pi_monthly_report
+		WHERE YYYYMM = CONCAT(
+			YEAR(DATE_ADD(NOW(), INTERVAL -1 MONTH)),
+			LPAD(MONTH(DATA_ADD(NOW(), INTERVAL -1 MONTH)), 2, '0')
+		)
+	</select>
+	
+	<select id="getMonthlyReport" resultClass="com.skyun.recon.util.database.ibatis.vo.reportVo">
+		SELECT
+			CNT.TARGET_ID AS TARGET_ID,
+			WHERE YYYYMM = CONCAT(
+				YEAR(DATE_ADD(NOW(), INTERVAL -1 MONTH)),
+				LPAD(MONTH(DATA_ADD(NOW(), INTERVAL -1 MONTH)), 2, '0')
+			) AS YYYYMM,
+			(SELECT COUNT(DISTINCT HASH_ID) FROM pi_find
+			WHERE TARGET_ID = CNT.TARGET_ID) AS PATH,
+			CNT.RRN AS RRN,
+			CNT.FOREIGNER AS FOREIGNER,
+			CNT.PASSPORT AS PASSPORT,
+			CNT.DRIVER AS DRIVER,
+			CNT.ACCOUNT_NUM AS ACCOUNT_NUM,
+			CNT.CARD_NUM AS CARD,
+			CNT.PHONE AS PHONE,
+			CNT.TOTALS AS TOTAL,
+			IFNULL(PDP.DEL,0) AS DEL,
+			IFNULL(PDP.ENCODING,0) AS ENCODING,
+			IFNULL(PDP.MASKING,0) AS MASKING,
+			IFNULL(PDP.CONFIRM_ETC,0) AS CONFIRM_ETC,
+			IFNULL(PDP.EXCEPTION,0) AS EXCEPTION,
+			IFNULL(PDP.FALSE_AGREE,0) AS FALSE_AGREE,
+			IFNULL(PDP.FALSE_ETC,0) AS FALSE_ETC,
+			IFNULL(PDP.TEMP_STOR,0) AS TEMP_STOR,
+			IFNULL(ACT.ACT,0) AS ACT,
+			IFNULL(ACT.ACT_NOT,0) AS ACT_NOT
+		FROM
+			(SELECT
+				A.TARGET_ID as target_id,
+				(SELECT NAME FROM PI_TARGETS WHERE A.TARGET_ID = TARGET_ID) AS NAME,
+				SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'SOUTH KOREAN DRIVER LICENSE NUMBER') > 0 THEN B.MATCH_COUNT ELSE 0 END) AS driver,
+				SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'SOUTH KOREAN FOREIGNER NUMBER') > 0 THEN B.MATCH_COUNT ELSE 0 END) AS foreigner,
+				SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'SOUTH KOREAN PASSPORT') > 0 THEN B.MATCH_COUNT ELSE 0 END) AS passport,
+				SUM(CASE
+				WHEN INSTR(UPPER(B.DATA_TYPE), 'SOUTH KOREAN RRN') > 0 THEN B.MATCH_COUNT ELSE 0 END) AS rrn,
+				SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'ACCOUNT NUMBER') > 0 THEN B.MATCH_COUNT ELSE 0 END) AS
+				account_num,
+				(
+				SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'AMERICAN EXPRESS') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'CHINA UNION PAY') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'DINERS C:UB') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'DISCOVER') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'JCB') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'LASER') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'MAESTRO') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'MASTERCARD') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'PRIVATE LABEL CARD') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'TROY') > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				+ SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'VISA' ) > 0 THEN B.MATCH_COUNT ELSE 0 END)
+				) AS card_num,
+				SUM(CASE WHEN INSTR(UPPER(B.DATA_TYPE), 'SOUTH KOREAN PHONE NUMBER') > 0 THEN B.MATCH_COUNT ELSE 0 END) AS PHONE,
+				SUM(B.MATCH_COUNT) AS TOTALS
+			FROM PI_FIND A, pi_summary B
+			WHERE B.OBJECT_ID = A.HASH_ID
+				AND B.TARGET_ID = A.TARGET_ID
+				AND B.GROUP_ID = A.GROUP_ID
+				AND DATE_FORMAT(A.REGDATE, '%Y-%m,%d')
+					BETWEEN CONCAT(YEAR(DATE_ADD(NOW(), INTERVAL -1 MONTH)), '-', MONTH(DATE_ADD(NOW(), INTERVAL -1 MONTH)), '-01')
+					AND DATE_FORMAT(NOW(), '%Y-%m-%d')
+			GROUP BY A.TARGET_ID) CNT	
+		LEFT OUTER JOIN
+			(
+			SELECT 
+				TARGET_ID,
+				SUM(CASE WHEN PROCESSING_FLAG = 1 THEN 1 ELSE 0 END) AS DEL,
+				SUM(CASE WHEN PROCESSING_FLAG = 2 THEN 1 ELSE 0 END) AS ENCODING,
+				SUM(CASE WHEN PROCESSING_FLAG = 3 THEN 1 ELSE 0 END) AS MASKING,
+				SUM(CASE WHEN PROCESSING_FLAG = 4 THEN 1 ELSE 0 END) AS CONFIRM_ETC,
+				SUM(CASE WHEN PROCESSING_FLAG = 5 THEN 1 ELSE 0 END) AS EXCEPTION,
+				SUM(CASE WHEN PROCESSING_FLAG = 6 THEN 1 ELSE 0 END) AS FALSE_AGREE,
+				SUM(CASE WHEN PROCESSING_FLAG = 7 THEN 1 ELSE 0 END) AS FALSE_ETC
+				SUM(CASE WHEN PROCESSING_FLAG = 8 THEN 1 ELSE 0 END) AS TEMP_STOR
+			FROM pi_data_processing PDP
+			WHERE 1=1
+			GROUP BY TARGET_ID
+			) PDP
+		ON CNT.TARGET_ID = PDP.TARGET_ID
+		LEFT OUTER JOIN
+			(SELECT
+				PDPG.TARGET_ID AS TARGET_ID,
+				COUNT(IDX) ACT,
+				SUM(CASE WHEN DATE(NOW()) >= NEXT_DATE_REMEDI AND PF.REGDATE > PDPG.NEXT_DATE_REMEDI THEN 1 ELSE 0 END) AS ACT_NOT
+			FROM pi_data_processing_group PDPG, pi_data_processing PDP, pi_find PF
+			WHERE PDPG.IDX = PDP.DATA_PROCESSING_GROUP_IDX
+				AND PDP.HASH_ID = PF.HASH_ID
+				AND NEXT_DATE_REMEDI
+					BETWEEN CONCAT(YEAR(DATE_ADD(NOW(), INTERVAL -1 MONTH)), '-', MONTH(DATE_ADD(NOW(), INTERVAL -1 MONTH)), '-01')
+					AND LAST_DAY(DATE_ADD(NOW(), INTERVAL -1 MONTH))
+			GROUP BY PDPG.TARGET_ID
+			) ACT
+		ON CNT.TARGET_ID = ACT.TARGET_ID
+	</select>
+	
+	<select id="getExceptionListForOwner" resultClass="com.skyun.recon.util.database.ibatis.vo.exceptionVo">
+		SELECT pe.*
+		FROM (
+			SELECT
+				idx, group_id, target_id, hash_id, approval_status,
+				regdate, okdate, reg_user_no, ok_user_no
+			FROM pi_exception
+			WHERE approval_status = 'E'
+			ORDER BY okdate DESC
+		) pe
+		WHERE PE.OKDATE = (SELECT MAX(OKDATE) FROM pi_exception WHERE APPROVAL_STATUS = 'E' AND GROUP_ID = PE.GROUP_ID AND TARGET_ID = PE.TARGET_ID)
+		ORDER BY LENGTH(group_id) ASC
+	</select>
+	
+	<select id="getOwnerFromChargeUpdate" parameterClass="com.skyun.recon.util.database.ibatis.vo.findlVo" resultClass="String">
+		SELECT
+			update_owner
+		FROM pi_charge_update
+		WHERE target_id = #target_id#
+		AND hash_id = #hash_id#
+		AND APPROVAL_STATUS = 'E'
+		AND PATH = #path#
+		ORDER BY OKDATE DESC
+		LIMIT 1
+	</select>
+	
+	<select id="getHashId" parameterClass="HashMap" resultClass="HashMap">
+		SELECT 
+			a.hash_id, a.group_id, a.target_id, a.path
+		FROM pi_find a, pi_targets b
+		WHERE a.target_id = b.target_id
+			AND a.target_id = #target_id#
+			AND a.path LIKE CONCAT('%', #path#)
+		LIMIT 1
+	</select>
+	
+	<select id="getUpdateList" parameterClass="com.iopts.skyun.recon.vo.groupall.scheduleCo" resultClass="com.skyun.recon.util.database.ibatis.vo.schdelesVo">
+		SELECT
+			SCHEDULE_ID, SCHEDULE_TARGET_ID
+		FROM PI_SCHEDULES
+		WHERE SCHEDULE_STATUS = 'scanning'
+			AND SCHEDULE_ID = #id#
+			AND AP_NO = #ap_no#
+	</select>
+	
+	<select id="getTargetVo" parameterClass="HashMap" resultClass="com.skyun.recon.util.database.ibatis.vo.targetVo">
+		SELECT
+			 group_id, target_id, comments, search_status, search_time
+			,name, platform, critical, error, notice
+			,test, prohibited, matchcnt, regdate, duration
+			,all_duration, all_scan_date, ap_no
+		FROM PI_TARGETS
+		WHERE TARGET_ID = #target_id#
+			AND AP_NO = #ap_no#
+	</select>
+	
+	<select id="getPathOwner" parameterClass="com.skyun.recon.util.database.ibatis.vo.targetVo" resultClass="com.skyun.recon.util.database.ibatis.vo.pathOwnerVo">
+		SELECT 
+			 EX.IDX					AS IDX
+			,EX.GROUP_ID			AS PATH
+			,EX.TARGET_ID			AS TARGET_ID
+			,EX.HASH_ID				AS TARGET_NAME
+			,(SELECT TEAM_NAME FROM PI_GROUP G WHERE U.INSA_CODE = G.INSA_CODE) AS TEAM_NAME
+			,EX.OK_USER_NO			AS USER_NO
+			,U.USER_NAME 			AS USER_NAME
+			,U.JIKGUK				AS JIKGUK
+		FROM pi_exception EX 
+				LEFT OUTER JOIN PI_USER U ON EX.OK_USER_NO = U.USER_NO
+				,( SELECT 
+						TARGET_ID
+						,GROUP_ID
+						,MAX(REGDATE) AS REGDATE
+				FROM PI_EXCEPTION
+				WHERE 1=1
+					AND APPROVAL_STATUS = 'E'
+				GROUP BY TARGET_ID, GROUP_ID ) A 
+		WHERE 1=1
+			AND EX.REGDATE = A.REGDATE AND EX.TARGET_ID = A.TARGET_ID AND EX.GROUP_ID = A.GROUP_ID
+			AND EX.APPROVAL_STATUS = 'E'
+			AND EX.TARGET_ID = #target_id#
+		ORDER BY LENGTH(EX.GROUP_ID) DESC
+	</select>
+	
+	<select id="getOwnerFromAccountInfo" resultClass="String" parameterClass="com.skyun.recon.util.database.ibatis.vo.findlVo">
+		SELECT  
+			AI.USER_ID
+		FROM pi_account_info ai,
+			(SELECT sai.svr_host, sai.ACCOUNT, max(sai.create_dt) AS create_dt, st.target_id
+				FROM pi_account_info sai, pi_targets st, pi_user su
+				WHERE sai.svr_host = st.name
+				AND sai.user_id = su.user_no
+				GROUP BY sai.svr_host, sai.account
+			) sub,
+			pi_user u
+		WHERE 1=1
+		AND ai.svr_host = sub.svr_host
+		AND ai.account = sub.account
+		AND ai.create_dt = sub.create_dt
+		AND ai.user_id = u.user_no
+		AND sub.target_id = #target_id#
+		AND ai.account = #account#
+	</select>
+	
+	<select id="getScheduleCount" resultClass="int" parameterClass="com.iopts.skyun.recon.vo.groupall.scheduleCo">
+		SELECT COUNT(SCHEDULE_ID)
+		FROM PI_SCHEDULES
+		WHERE SCHEDULE_ID = #id#
+			AND AP_NO = #ap_no#
+	</select>
+</sqlMap>
