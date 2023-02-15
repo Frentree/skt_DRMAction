@@ -5,23 +5,23 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import com.skyun.app.util.config.AppConfig;
-import com.skyun.recon.util.database.ibatis.vo.targetVo;
+import com.skyun.recon.util.database.ibatis.vo.pathVo;
 
 public class QueueStaticPool {
 
-	static BlockingQueue<targetVo> JobQueue = null;
+	static BlockingQueue<pathVo> JobQueue = null;
 	static HashMap<String,String> exception_hash = null;
 
 	static {
-		JobQueue = new ArrayBlockingQueue<targetVo>(AppConfig.getPropertyInt("config.queue.size"));
+		JobQueue = new ArrayBlockingQueue<pathVo>(AppConfig.getPropertyInt("config.queue.size"));
 		exception_hash=new HashMap<>();
 	}
 
-	public BlockingQueue<targetVo> getJobQueue() {
+	public BlockingQueue<pathVo> getJobQueue() {
 		return JobQueue;
 	}
 
-	public void setJobQueue(BlockingQueue<targetVo> jobQueue) {
+	public void setJobQueue(BlockingQueue<pathVo> jobQueue) {
 		JobQueue = jobQueue;
 	}
 

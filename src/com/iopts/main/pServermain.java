@@ -8,7 +8,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.iopts.scheduler.ReconSchedulerJobs;
+import com.iopts.scheduler.drmJobs;
 import com.skyun.app.util.config.AppConfig;
 
 public class pServermain {
@@ -26,7 +26,7 @@ public class pServermain {
 		File f = new File(currentDir);
 		currentDir = f.getParent().toString();
 
-		LOGJ_PATH = currentDir + "/conf/logbackSchedule.xml";
+		LOGJ_PATH = currentDir + "/conf/logback.xml";
 		System.setProperty("logback.configurationFile", LOGJ_PATH);
 		
 
@@ -40,16 +40,9 @@ public class pServermain {
 
 		logger.info(">> Process ID :" + AppConfig.getPID());
 		logger.info(">> Home Dir :" + AppConfig.currentDir);
-		logger.info(">> System Version  2019-05-14__________________ ");
-		logger.info(">> System Version  2019-08-08 (Mod)__________________ ");
-		logger.info(">> System Version  2019-09-18 for Recon 2.0 ");
-		logger.info(">> System Version  2019-09-18 for Owner Find,Subpath match account info");
-		logger.info(">> System Version  2022-05-19 Patch list");
-		logger.info(">> 	1) NH PIC Update");
-		logger.info(">> 	2) Schedule All Update Formmat config.reconSchedule.startTime");
-		logger.info(">> 	6> customer ID :: " + customer_id);
+		logger.info(">> System Version  2023-02-09");
 
-		new Thread(new ReconSchedulerJobs()).start();
+		drmJobs drm = new drmJobs();
 
 	}
 
