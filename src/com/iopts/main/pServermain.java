@@ -26,7 +26,7 @@ public class pServermain {
 		File f = new File(currentDir);
 		currentDir = f.getParent().toString();
 
-		LOGJ_PATH = currentDir + "/conf/logback.xml";
+		LOGJ_PATH = currentDir + "/conf/logbackDRMAction.xml";
 		System.setProperty("logback.configurationFile", LOGJ_PATH);
 		
 

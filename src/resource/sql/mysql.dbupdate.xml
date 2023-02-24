@@ -7,11 +7,12 @@
 		UPDATE pi_find
 			SET DELDATE = NULL
 		WHERE TARGET_ID = (SELECT TARGET_ID FROM pi_targets WHERE NAME = #hostname#)
-		AND PATH = #path#
+		AND AP_NO IN (1, 2)
+		AND REPLACE(PATH, '_decrypted.', '.') = #path#
 		AND REGDATE = (SELECT MAX(REGDATE) 
 							FROM pi_find
 							WHERE TARGET_ID = (SELECT TARGET_ID FROM pi_targets WHERE NAME = #hostname#)
-							AND PATH = #path# )
+							AND REPLACE(PATH, '_decrypted.', '.') = #path# )
 	</update>
 	
 </sqlMap>

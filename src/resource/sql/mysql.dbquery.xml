@@ -4,18 +4,18 @@
 
 <sqlMap namespace="query">
 	<select id="getDelDatePathList" parameterClass="String" resultClass="com.skyun.recon.util.database.ibatis.vo.pathVo">
-	   SELECT hostname, REPLACE(REPLACE(PATH, '\\', '\\\\'), 'File path ', '') AS path, type, MAX(REGDATE) AS regdate
+	   SELECT hostname, REPLACE(PATH, '\\', '\\\\') AS path, type, MAX(REGDATE) AS regdate
 		FROM drm_job DRM
 	   WHERE TYPE = 'IS_ENCRYPT'
 		   AND DONE = '1'
 		   AND SUCCESS = '1'
-		   AND RESULT LIKE ' RETURN 1%'
+		   AND RESULT LIKE ' return 1%'
 		   AND date(REGDATE) >= CURDATE() - INTERVAL 7 DAY
 	   GROUP BY HOSTNAME, DRM.PATH, TYPE
 	</select>
 	
 	<select id="getDRMJob" parameterClass="String" resultClass="com.skyun.recon.util.database.ibatis.vo.pathVo">
-	   SELECT S.SCHEDULE_TARGET_NAME AS hostname, REPLACE(REPLACE(SL.NAME, 'FILE PATH ', ''), '_DECRYPTED.', '.') AS path
+	   SELECT S.SCHEDULE_TARGET_NAME AS hostname, REPLACE(REPLACE(SL.NAME, 'File path ', ''), '_decrypted.', '.') AS path
 		FROM PI_SCHEDULED_LOCATION SL, PI_SCHEDULES S, PI_AP_SERVER AP
 	   WHERE SL.SCH_ID = S.SCHEDULE_ID
 			AND SL.AP_NO = S.AP_NO 

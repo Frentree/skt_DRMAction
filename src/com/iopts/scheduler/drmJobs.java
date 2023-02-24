@@ -36,7 +36,7 @@ public class drmJobs {
 				updateDelDate(vo);
 			}
 			for (pathVo vo : dList) {
-				// registDRMJob(vo);
+				registDRMJob(vo);
 			}
 		} catch (Exception e) {
 			// TODO: handle exception
@@ -46,21 +46,19 @@ public class drmJobs {
 	}
 	
 	private void updateDelDate(pathVo vo) {
-		
 		try {
-		
 			vo.setPath(vo.getPath ().replaceAll("\\\\\\\\", "\\\\"));
 			tr.setDBInsertTable("update.setDelDate", vo);
-			
-			logger.info("test >> " + vo.toString());
+			logger.info("update Deldate >> " + vo.toString());
 		} catch (Exception e) {
-			logger.error("mysql update error >>>> " + e.toString());
+			logger.error(e.toString());
 		}
 		
 	}
 	
 	private void registDRMJob(pathVo vo) {
 		tr.setDBInsertTable("insert.setDRMJob", vo);
+		logger.info("regist DRM >> " + vo.toString());
 	}
 
 }

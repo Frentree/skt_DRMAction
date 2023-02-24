@@ -8,7 +8,7 @@
 		INSERT INTO drm_job
 		(hostname,path,type,category_no,done,success,result,regdate)
 		VALUES
-		(#hostname#,#path#,'IS_ENCRYPT','P',0,0,NULL,now())
+		(#hostname#,#path#,'is_encrypt','p',0,0,NULL,now())
 	</insert>
 
 </sqlMap>
