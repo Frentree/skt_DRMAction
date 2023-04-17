@@ -47,7 +47,7 @@ public class drmJobs {
 	
 	private void updateDelDate(pathVo vo) {
 		try {
-			vo.setPath(vo.getPath ().replaceAll("\\\\\\\\", "\\\\"));
+			vo.setPath(vo.getPath().replaceAll("\\\\\\\\", "\\\\"));
 			tr.setDBInsertTable("update.setDelDate", vo);
 			logger.info("update Deldate >> " + vo.toString());
 		} catch (Exception e) {

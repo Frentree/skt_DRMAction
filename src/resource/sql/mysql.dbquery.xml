@@ -15,7 +15,7 @@
 	</select>
 	
 	<select id="getDRMJob" parameterClass="String" resultClass="com.skyun.recon.util.database.ibatis.vo.pathVo">
-	   SELECT S.SCHEDULE_TARGET_NAME AS hostname, REPLACE(REPLACE(SL.NAME, 'File path ', ''), '_decrypted.', '.') AS path
+	   SELECT S.SCHEDULE_TARGET_ID, S.SCHEDULE_TARGET_NAME AS hostname, REPLACE(REPLACE(SL.NAME, 'File path ', ''), '_decrypted.', '.') AS path
 		FROM PI_SCHEDULED_LOCATION SL, PI_SCHEDULES S, PI_AP_SERVER AP
 	   WHERE SL.SCH_ID = S.SCHEDULE_ID
 			AND SL.AP_NO = S.AP_NO 
@@ -25,6 +25,7 @@
 			AND S.SCHEDULE_TARGET_ID = SL.TARGET_ID 
 			AND S.DRM_STATUS IN ('C')
 			AND FROM_UNIXTIME(SL.STARTED, '%Y-%m-%d') > DATE_FORMAT(DATE_ADD(NOW(), INTERVAL -1 WEEK), '%Y-%m-%d')
+	   GROUP BY S.SCHEDULE_TARGET_ID
 	   ORDER BY 1 DESC
 	</select>
 	

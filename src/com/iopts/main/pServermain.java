@@ -18,7 +18,6 @@ public class pServermain {
 	private static String PID = null;
 	public static String currentDir = null;
 	
-
 	private static String customer_id = "";
 	public static void main(String[] args) {
 
