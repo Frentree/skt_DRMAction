@@ -6,12 +6,12 @@
 	<update id="setDelDate" parameterClass="com.skyun.recon.util.database.ibatis.vo.pathVo">
 		UPDATE pi_find
 			SET DELDATE = NULL
-		WHERE TARGET_ID = (SELECT TARGET_ID FROM pi_targets WHERE NAME = #hostname#)
+		WHERE TARGET_ID = (SELECT TARGET_ID FROM pi_targets WHERE NAME = #hostname# AND TARGET_USE = 'Y')
 		AND AP_NO IN (1, 2)
 		AND REPLACE(PATH, '_decrypted.', '.') = #path#
 		AND REGDATE = (SELECT MAX(REGDATE) 
 							FROM pi_find
-							WHERE TARGET_ID = (SELECT TARGET_ID FROM pi_targets WHERE NAME = #hostname#)
+							WHERE TARGET_ID = (SELECT TARGET_ID FROM pi_targets WHERE NAME = #hostname# AND TARGET_USE = 'Y')
 							AND REPLACE(PATH, '_decrypted.', '.') = #path# )
 	</update>
 	
